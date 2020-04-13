@@ -4,13 +4,14 @@ Este repositório contém a solução da Lista de Exercícios referente ao módu
 
 ## Estrutura de pastas
 
-* **./**: arquivos fonte .Rmd que contêm a solução das questões. 
+* **./**: arquivos-base .Rmd que contêm a solução das questões. 
 * **www**: arquivos de input e código auxiliar.
 * **output**: arquivos HTML gerados pelo Knit dos arquivos .Rmd do Rstudio.
 
 ## Packages necessários
 
 Para executar os códigos são necessários os seguintes pacotes:
+
 * install.packages(tidyverse)
 * install.packages(janitor)
 * install.packages(dplyr)
