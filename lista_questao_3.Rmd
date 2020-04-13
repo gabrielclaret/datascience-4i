@@ -1,0 +1,83 @@
+---
+title: "Questão 3"
+output:
+  html_document:
+    df_print: paged
+---
+
+### Imports
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(plotly)
+```
+
+```{r message=FALSE, warning=FALSE}
+spotify_songs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv')
+
+```
+
+```{r}
+genre_popularity <- spotify_songs %>% 
+  select(c("playlist_genre", "track_popularity")) %>% 
+  group_by(playlist_genre) %>% 
+  summarise(track_popularity = mean(track_popularity)) %>%
+  ungroup()
+
+```
+
+```{r}
+data <- genre_popularity %>% 
+        rename(x = "playlist_genre", y = "track_popularity")
+
+plot <- ggplot(data, aes(x=x, y=y)) +
+  geom_segment( aes(x=x, xend=x, y=0, yend=y), color="grey") +
+  geom_point( color="orange", size=4) +
+  theme_light() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  xlab("Gênero") +
+  ylab("Popularidade")
+
+ggplotly(plot)
+
+```
+
+```{r}
+
+songs_attributes <- spotify_songs %>% 
+  select(c("danceability", "energy", "tempo", "acousticness", "instrumentalness", "track_popularity", "playlist_genre")) %>% 
+  group_by(playlist_genre) %>% 
+  summarise(track_popularity = mean(track_popularity), danceability = mean(danceability), 
+            energy = mean(energy), tempo = mean(tempo), acousticness = mean(acousticness), 
+            instrumentalness = mean(instrumentalness)) %>% 
+  ungroup()
+
+numero_indice_b <- function(data){
+  data_aux <- data
+  data[1] <-  100; 
+  
+  for(i in 2:length(data)){
+    data[i] <-  ( data_aux[i]/data_aux[i-1] ) * data[i-1]
+  }
+  
+  return(data)
+}
+
+data_a <- songs_attributes %>%
+  select(-playlist_genre) %>%
+  purrr::map_df(function(x) x %>% numero_indice_b())
+
+correl <-  cor(data_a) %>% round(2) 
+
+corrplot::corrplot(correl, 
+                   type = "upper",
+                   tl.col = "black",
+                   title = "Correlação entre atributos da música"
+                   )
+
+```
+
