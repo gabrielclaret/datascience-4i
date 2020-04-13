@@ -13,6 +13,7 @@ library(dplyr)
 library(lubridate)
 ```
 
+
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 load(file = "www/us_change.rda")
 us_change <- us_change %>% janitor::clean_names()
