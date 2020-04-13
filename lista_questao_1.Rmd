@@ -14,7 +14,7 @@ library(lubridate)
 ```
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-load(file = "us_change.rda")
+load(file = "www/us_change.rda")
 us_change <- us_change %>% janitor::clean_names()
 ```
 
@@ -75,7 +75,7 @@ corrplot::corrplot(correl1,
 
 
 ```{r echo=FALSE, fig.height=4, fig.width=3}
-source("./multiplot.R")
+source("www/multiplot.R")
 
 p1 <- data_b %>% 
   ggplot(aes(x = quarter, y = consumption)) + 

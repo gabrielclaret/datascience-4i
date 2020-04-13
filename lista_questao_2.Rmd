@@ -21,7 +21,7 @@ library(plotly)
 **a)** O excel continha 2 linhas de títulos para as colunas, foi necessário ler o xlsx sem a primeira linha, utilizando o parametro `range` do read_excel.
 
 ```{r}
-data <- readxl::read_excel("./retail.xlsx", col_names = TRUE, range = "A2:GH383") %>% 
+data <- readxl::read_excel("www/retail.xlsx", col_names = TRUE, range = "A2:GH383") %>% 
         janitor::clean_names() %>% 
         rename(date = "series_id")
 ```
