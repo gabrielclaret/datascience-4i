@@ -1,0 +1,158 @@
+---
+title: "Questão 1"
+output:
+  html_document:
+    df_print: paged
+---
+
+### Imports
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+library(dplyr)
+library(lubridate)
+```
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+load(file = "us_change.rda")
+us_change <- us_change %>% janitor::clean_names()
+```
+
+**a)** Disponibilizando as variáveis em número índice.
+
+
+```{r message=FALSE, warning=FALSE}
+
+numero_indice <- function(data){
+  data_aux <- data
+  data[1] <-  100; 
+  
+  for(i in 2:length(data)){
+    data[i] <- ( 1 + data_aux[i]/100 ) * data[i-1]
+  }
+  
+  return(data)
+}
+
+
+data_a <- us_change %>% 
+  filter(lubridate::year(quarter) >= 2000) %>% 
+  select(-quarter) %>% 
+  purrr::map_df(function(x) x %>% numero_indice())
+
+data_b <- us_change %>% filter(year(quarter) >= 2000)
+
+data_a <- data_a %>% mutate(quarter = data_b$quarter)
+
+```
+
+**b)** Calculando a correlação entre as variáveis em Número Índice é a forma correta de se fazer, já que com as taxas de variação os valores de cada elemento de comparação estão em níveis diferentes, causando um erro na correlação.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+correl <-  cor(data_a %>% 
+      select(-"quarter")) %>% round(2) 
+
+corrplot::corrplot(correl, 
+                   type = "upper",
+                   tl.col = "black",
+                   title = "Correlação em Indice"
+                   )
+
+correl1 <-  cor(data_b %>% 
+      select(-"quarter")) %>% round(2) 
+
+corrplot::corrplot(correl1, 
+                   type = "upper",
+                   tl.col = "black",
+                   title = "Correlação em Taxa"
+                   )
+```
+
+
+**c)** Plotando os gráficos das variáveis em taxa e em número índice.
+
+
+```{r echo=FALSE, fig.height=4, fig.width=3}
+source("./multiplot.R")
+
+p1 <- data_b %>% 
+  ggplot(aes(x = quarter, y = consumption)) + 
+  geom_line()+ 
+  ggtitle("Consumption") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p2 <- data_a %>% 
+  ggplot(aes(x = quarter, y = consumption)) + 
+  geom_line()+ 
+  ggtitle("Consumption em Num Indice") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p3 <- data_b %>% 
+  ggplot(aes(x = quarter, y = income)) + 
+  geom_line()+ 
+  ggtitle("Income") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p4 <- data_a %>% 
+  ggplot(aes(x = quarter, y = income)) + 
+  geom_line()+ 
+  ggtitle("Income em Num Indice") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p5 <- data_b %>% 
+  ggplot(aes(x = quarter, y = production)) + 
+  geom_line()+ 
+  ggtitle("Production") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p6 <- data_a %>% 
+  ggplot(aes(x = quarter, y = production)) + 
+  geom_line()+ 
+  ggtitle("Production em Num Indice") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p7 <- data_b %>% 
+  ggplot(aes(x = quarter, y = savings)) + 
+  geom_line()+ 
+  ggtitle("Savings") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p8 <- data_a %>% 
+  ggplot(aes(x = quarter, y = savings)) + 
+  geom_line()+ 
+  ggtitle("Savings em Num Indice") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p9 <- data_b %>% 
+  ggplot(aes(x = quarter, y = unemployment)) + 
+  geom_line()+ 
+  ggtitle("Unemployment") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p10 <- data_a %>% 
+  ggplot(aes(x = quarter, y = unemployment)) + 
+  geom_line()+ 
+  ggtitle("Unemployment em Num Indice") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+multiplot(p1, p2)
+multiplot(p3, p4)
+multiplot(p5, p6)
+multiplot(p7, p8)
+multiplot(p9, p10)
+
+```
+
+**d)** As variáveis, com excessão da taxa de Desemprego, aumentaram ao longo do tempo. Visto que, em um cenário de poucas recessões, é algo que era esperado. 
+Correlacionando as variáveis temos algumas inferências que são lógicas para o mundo da economia, por exemplo, quanto maior o desemprego menor o consumo, ou então quanto maior a renda maior a poupança.
+
+
+**e)** Um ponto atípico que pode ser visto é a grande queda de produção/consumo e a alta no desemprego por meados de 2008. Essa mudança abrupta provavelmente foi causada pela **Crise financeira de 2007–2008**.
+
+
+
+
+

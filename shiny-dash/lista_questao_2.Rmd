@@ -1,0 +1,79 @@
+---
+title: "Questão 2"
+output:
+  html_document:
+    df_print: paged
+---
+
+### Imports
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+library(dplyr)
+library(lubridate)
+library(readxl)
+library(forecast)
+library(seasonal)
+library(plotly)
+```
+
+**a)** O excel continha 2 linhas de títulos para as colunas, foi necessário ler o xlsx sem a primeira linha, utilizando o parametro `range` do read_excel.
+
+```{r}
+data <- readxl::read_excel("./retail.xlsx", col_names = TRUE, range = "A2:GH383") %>% 
+        janitor::clean_names() %>% 
+        rename(date = "series_id")
+```
+
+**b)**
+
+```{r}
+
+grocery_market.ts <- data %>% 
+  select(c("a3349335t") ) %>% 
+  ts(
+    start = c(
+      lubridate::year(dplyr::first(data$date)),
+      lubridate::month(dplyr::first(data$date))),
+    
+    end = c(
+      lubridate::year(dplyr::last(data$date)), 
+      lubridate::month(dplyr::last(data$date))),
+    
+    frequency = 12
+  ) %>% 
+  .[,1]
+
+
+```
+
+**c)** É possível perceber uma grande sazonalidade, com novembro/dezembro sendo os meses que Supermercados e Lojas de Conveniência têm maiores vendas, pouco ciclo e tendência linear positiva ao longo dos anos.
+
+```{r echo=FALSE}
+p <- grocery_market.ts %>% 
+  ggseasonplot() + 
+  ggtitle("Supermarket and Grocery Stores, Turnover - New South Wales - Season Plot") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p1 <- grocery_market.ts %>% 
+  ggmonthplot() + 
+  ggtitle("Supermarket and Grocery Stores, Turnover - New South Wales - Month Plot") + ylab("") + xlab("") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplotly(p)
+ggplotly(p1)
+```
+
+**d)** Com o plot da decomposição da Time Series é possivel perceber que em 2009 houve um pico de vendas nos Supermercados e Lojas de Conveniência em New South Wales, na Austrália.
+
+ 
+```{r}
+data_x11 <- seasonal::seas(grocery_market.ts, x11 = "")
+
+data_x11 %>% autoplot() + ggtitle("X11 Decomposition Supermarket and Grocery Stores Time Series")
+
+plot(data_x11)
+```
+
+

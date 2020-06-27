@@ -1,0 +1,69 @@
+---
+title: "crawler"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Script em python
+
+Este é um crawler que baixa um json com dados históricos do dolar de 2015 até 2020.
+
+```
+import requests
+import pandas as pd
+from datetime import datetime
+
+resposta = requests.get("https://api.cotacoes.uol.com/currency/interday/list/years/?format=JSON&fields=bidvalue,askvalue,maxbid,minbid,variationbid,variationpercentbid,openbidvalue,date&currency=1&")
+
+dollar_json = resposta.json()
+
+serie = []
+for i, doc in enumerate(dollar_json["docs"]):
+  dolar = {
+      "askvalue": doc.get("askvalue", ""),
+      "date": datetime.strptime(doc.get("date", ""), "%Y%m%d000000")
+  }
+  serie.append(dolar)
+
+df_dolar = pd.DataFrame(serie)
+
+df_dolar = df_dolar.sort_values("date", ascending = True)
+
+df_dolar.to_csv("dolar_real.csv", index = False)
+
+```
+
+## Plot 
+
+Plot do CSV gerado pelo crawler:
+
+```{r dolar, echo=TRUE, message=FALSE, warning=FALSE}
+library("ggplot2")
+library("plotly")
+
+data = read.csv("dolar_real.csv") %>% 
+       rename(x = "date", y = "askvalue")
+
+datas <- data$x %>% as.Date()
+
+plot <- ggplot(data, aes(x=datas, y=y, group = 1)) +
+  geom_line() +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle=90, vjust=0.5, hjust=1), 
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  scale_x_date(date_labels = "%b-%Y", ) +
+  xlab("Tempo") +
+  ylab("Dólar")
+
+ggplotly(plot)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
