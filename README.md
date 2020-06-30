@@ -7,6 +7,7 @@ Este repositório contém a solução da Lista de Exercícios referente ao módu
 * **./**: arquivos-base .Rmd que contêm a solução das questões. 
 * **www**: arquivos de input e código auxiliar.
 * **output**: arquivos HTML gerados pelo Knit dos arquivos .Rmd do Rstudio.
+* exercicios_ML: arquivos respostas das listas 1 a 4 de ML.
 
 ## Packages necessários
 
