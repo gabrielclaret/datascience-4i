@@ -1,0 +1,347 @@
+---
+title: "lista_3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercícios Multipla Escolha 
+
+1. D
+2. C
+3. C
+4. C
+5. A
+6. C
+7. C
+
+## Questao 1. 
+```{r Questao 1, message=FALSE, warning=FALSE}
+library(datasets)
+library(caret)
+library(varhandle)
+library(e1071)
+
+# 1
+data <- iris
+species <- to.dummy(data$Species, "species")
+species <- as.data.frame(species)
+unique(species)
+
+Species <- species$species.virginica
+Species
+data <- data.frame(data[,1:4], Species)
+
+# 2
+data["Species"] <- lapply(data["Species"], factor) 
+str(data)
+
+# 3
+species <- data$Species
+species
+unique(species)
+size = dim(data)
+
+# 4
+set.seed(12)
+
+index <- createDataPartition(data$Species, p = 0.9, list = FALSE)
+index
+
+treino <-data[index,]
+teste <- data[-index,]
+
+# 5
+ggplot(treino, aes(x = treino$Petal.Length, y = treino$Petal.Width, color=Species)) + 
+  geom_point() + 
+  scale_color_discrete(labels = c("N Virginica","Virginica"))+
+  ylab('Width') + 
+  xlab('Lenght')
+
+# 6 7 8
+modelo <- glm(as.formula(" Species ~ ."), data = treino, family = 'binomial')
+summary(modelo)
+
+# 9
+pred <- as.factor(round(as.numeric(predict(modelo, teste, type="response"))))
+factors = as.factor(teste$Species)
+pred_data <- data.frame(pred, factors)
+confusionMatrix(data = pred, reference = factors, positive = "1")
+
+# 10
+flor1 <- data.frame(Sepal.Length=6.4, Sepal.Width=2.8, Petal.Length=4.6, Petal.Width=1.8)
+flor2 <- data.frame(Sepal.Length=6.3, Sepal.Width=2.5, Petal.Length=4.1, Petal.Width=1.7)
+pred_1 <- predict(modelo, flor1, type = 'response')
+pred_2 <- predict(modelo, flor2, type = 'response')
+pred_1
+pred_2
+
+```
+---
+## Questao 2.
+```{r Questao 2, message=FALSE, warning=FALSE}
+library(caret)
+library(ROCR)
+library(e1071)
+
+# 1 2 
+data <- read.csv("credit_dataset.csv", header = TRUE, sep = ',')
+str(data)
+View(data)
+
+# 3
+data$credit.duration.months <- scale(data$credit.duration.months, center = T, scale = T)
+data$age <- scale(data$age, center = T, scale = T)
+data$credit.amount <- scale(data$credit.duration.months, center = T, scale = T)
+
+asfactor <- function(df , variaveis){
+  # Loop para todas as variÃ¡veis
+  for (variavel in variaveis){
+  # ConversÃ£o para fator
+  df[[variavel]] <- as.factor(df[[variavel]])
+  }
+  return(df)
+}
+
+# 4
+
+colnames(data)
+variaveis <- c('credit.rating','account.balance','previous.credit.payment.status','credit.purpose','savings','employment.duration','installment.rate','marital.status','guarantor','residence.duration','current.assets','other.credits','apartment.type','bank.credits', 'occupation','dependents', 'telephone','foreign.worker')
+
+data_factor <- asfactor(data, variaveis)
+str(data_factor)
+View(data_factor)
+
+# ----------------------------------------------------------------------
+# PreparaÃ§Ã£o dos dados de treinamento e teste
+
+# Vamos usar a funÃ§Ã£o sample, do pacote base do R, para extrair uma porcentagem (%) de dados do conjunto dataset 
+# para a fase de treinamento, permitindo que o restante de dados seja usado para teste.
+
+# Para reproduÃ§Ã£o dos resultados
+set.seed(90)
+
+# Vamos gerar o vetor de Ã�ndices com posiÃ§Ãµes aleatÃ³rias que capturam 60% dos dados para treinamento
+index_training = sample(1:nrow(data_normalizado_factor), size = 0.6*nrow(data_normalizado_factor))
+
+# Dicas:
+# 1) a funÃ§Ã£o nrow nos fornece o nÃºmero de linhas do dataset (row)
+# 2) o parÃ¢metro size nos permite especificar o tamanho da amostra capturada para treino do modelo
+# 3) a variÃ¡vel index_training Ã© um vetor com posiÃ§Ãµes ou Ã�ndices que nos permitem capturar dados especÃ�ficos do dataset para treinamento
+
+# Com o vetor de Ã�ndices de treinamento criado - podemos obter os conjuntos de treino e teste
+training_data = data_normalizado_factor[index_training,]
+test_data     = data_normalizado_factor[-index_training,]
+
+# Dicas:
+# 1) repare na notaÃ§Ã£o do R para acessarmos o dataset por meio de Ã�ndices
+# 2) quando usamos a sintaxe [index,] -> quer dizer que queremos as linhas apontadas pelo Ã�ndice de todas as colunas
+# 3) quando usamos a sintaxe [-index,] -> o sinal de negativo - quer dizer que queremos as linhas que nÃ£o sÃ£o apontadas pelo Ã�ndice de todas as colunas
+# 4) essa extraÃ§Ã£o por meio de [] Ã© denotada como slicing de dataframes
+
+# VisulizaÃ§Ã£o dos conjuntos de treinamento e teste
+View(training_data)
+View(test_data)
+
+# Repare tambÃ©m que os conjuntos de treinamento e teste sÃ£o dataframes
+class(training_data)
+class(test_data)
+
+# Veja que o objetivo do modelo de regressÃ£o logÃ�stica Ã© fazer classificaÃ§Ãµes sobre crÃ©dito 
+# Ressaltando -> a variÃ¡vel target - de saÃ�da Ã© a credit.rating vamos separÃ¡-la no conjunto de teste
+test_features <- test_data[,-1]
+test_target   <- test_data[,1]
+
+# VerificaÃ§Ã£o das classes das variÃ¡veis explanatÃ³rias e a variÃ¡vel de saÃ�da
+class(test_features)
+class(test_target)
+
+# =======================================================================================================
+# ConstruÃ§Ã£o do Modelo Preditivo com RegressÃ£o LogÃ�stica  
+
+# Vamos criar o objeto referente Ã  equaÃ§Ã£o de relaÃ§Ã£o de variÃ¡veis do modelo
+equation <- "credit.rating ~ ."
+class(equation)
+equation <- as.formula(equation)
+class(equation)
+
+# Dicas:
+# 1) estamos criando uma fÃ³rmula no R 
+# 2) do lado esquerdo do ~ colocamos a variÃ¡vel target ou resposta
+# 3) do lado direito do ~ colocamos as variÃ¡veis explanatÃ³rias
+# 4) quando usamos o . -> estamos apontando o uso de todas as variÃ¡veis explanatÃ³rias
+
+# FunÃ§Ã£o usada para construÃ§Ã£o do modelo preditivo de regressÃ£o logÃ�stica
+# Fitting Generalized Linear Models
+# ?glm
+modelo_ML_logistic_1 <- glm(equation, data = training_data, family = "binomial")
+modelo_ML_logistic_1
+
+
+# SÃ�ntese das informaÃ§Ãµes do modelo
+summary(modelo_ML_logistic_1)
+
+# Dicas:
+# 1) observem os resultados do summary com atenÃ§Ã£o para verificar quais sÃ£o as variÃ¡veis explanatÃ³rias mais (estatÃ�sticamente) significativas para o modelo de ML 
+# 2) perceba agora que esse modelo estÃ¡ fazendo uma classificaÃ§Ã£o, considerando duas classes de saÃ�da (aprovaÃ§Ã£o ou desaprovaÃ§Ã£o) de crÃ©dito
+# 3) dbservem que tambÃ©m existem estatÃ�sticas relacionadas com os resÃ�duos do modelo treinado
+# 4) observem a estatÃ�stica z e seu p-value -> recordando do tÃ³pico sobre testes de hipÃ³teses que vimos na aula de revisÃ£o 
+# 5) o parÃ¢metro binomial para a famÃ�lia da regressÃ£o logÃ�stica Ã© usado pois a classe de saÃ�da sÃ³ pode assumir dois valores (1 ou 0)
+# 6) a funÃ§Ã£o glm pode ser usada para criar diferentes modelos - e o parÃ¢metro family Ã© o que permite diferenciar os modelos
+
+
+# -------------------------------------------------------------------------------------------------------------------------
+# Fazendo as prediÃ§Ãµes a partir do modelo treinado
+
+# View(test_data)
+previsao_teste <- predict(modelo_ML_logistic_1, test_data, type = 'response')
+previsao_teste
+# View(previsao_teste)
+
+# Repare que a funÃ§Ã£o predict nos fornece a previsÃ£o de cada classe expressa por probabilidades
+# Nesse caso, podemos usar a funÃ§Ã£o round para fazer o arredondamento para as classes desejadas (0 e 1) nesse caso binomial
+previsao_teste <- round(previsao_teste)
+# View(previsao_teste)
+# View(test_target)
+
+previsao_teste_data <- data.frame(previsao_teste, test_target)
+colnames(previsao_teste_data) <- c('PrevisÃ£o','Target')
+# View(previsao_teste_data)
+
+# -----------------------------------------------------------------------------------------------------------------------
+# ImplementaÃ§Ã£o da Matriz de ConfusÃ£o
+
+# ConstruÃ§Ã£o da matriz de confusÃ£o a partir dos dados de teste e as previsÃµes realizadas pelo modelo de ML
+cm_modelo_1 <- confusionMatrix(table(data = previsao_teste, reference = test_target), positive = "1")
+cm_modelo_1
+
+# Dicas:
+# 1) Observe na referÃªncia de ajuste - as definiÃ§Ãµes e interpretaÃ§Ãµes da sÃ�ntese estatÃ�stica fornecida junto com a matriz de confusÃ£o
+# 2) Compare com os slides que vimos na primeira aula (conceitos de ML) no momento em que abordamos as mÃ©tricas de performance dos modelos de ML
+# 3) Boa referÃªncia para compreeender a matriz de confusÃ£o e o package caret: Kuhn, M. (2008), âBuilding predictive models in R using the caret package
+# 4) A acurÃ¡cia calculada Ã© uma das principais mÃ©tricas e serem utilizadas na avaliaÃ§Ã£o de desempenho dos classificadores
+
+# ========================================================================================================================
+# SeleÃ§Ã£o de VariÃ¡veis ExplanatÃ³rias (Feature Selection) para Modelagem
+
+equation <- "credit.rating ~ ."
+equation <- as.formula(equation)
+
+# Uso da funÃ§Ã£o trainControl - trata-se de uma funÃ§Ã£o do pacote caret para que possamos aplicar um procedimento de 
+# controle sobre diversos treinamentos. Repare que usamos o mÃ©todo de repetiÃ§Ã£o de validaÃ§Ã£o cruzada
+controle_procedimento      <- trainControl(method = "repeatedcv", number = 10, repeats = 2)
+modelo_ML_controle_traning <- train(equation, data = training_data, method = 'glm', trControl = controle_procedimento)
+
+# ApÃ³s as diversas iteraÃ§Ãµes de treinamento do modelo, vamos usar a funÃ§Ã£o varImp, tambÃ©m do pacote caret, que irÃ¡ 
+# nos permite verifica quais sÃ£o as variÃ¡veis explanatÃ³rias mais importantes 
+feature_selection = varImp(modelo_ML_controle_traning, scale = TRUE)
+# VisualizaÃ§Ã£o das variÃ¡veis explanatÃ³rias mais relevantes
+plot(feature_selection)
+
+
+
+# ========================================================================================================
+# --------------------------------------------------------------------------------------------------------
+# Avaliando a performance do modelo logistio com todas as variÃ¡veis explanatÃ³rias - Modelo 1
+
+# Modelo de regressÃ£o logÃ�stica 1
+
+# PrevisÃµes do modelo de regressÃ£o logÃ�stica 1
+previsao_teste_modelo_1 <- predict(modelo_ML_logistic_1, test_data, type = 'response')
+# previsao_teste_modelo_1 <- round(previsao_teste_modelo_1)
+
+# Dataframe - previsÃ£o do modelo 1
+# dataframe_previsao_modelo_1 <- data.frame(previsao_teste_modelo_1, test_target)
+# colnames(dataframe_previsao_modelo_1) <- c('PrevisÃ£o Nova','Target')
+# View(dataframe_previsao_modelo_1)
+
+# Repare na diferenÃ§a entre a funÃ§Ã£o predict e a funÃ§Ã£o prediction
+previsoes_finais_modelo_1 <- prediction(previsao_teste_modelo_1, test_target)
+
+# FunÃ§Ã£o que podemos usar para plot da curva ROC 
+plot.roc.curve <- function(predictions, title.text){
+  perf <- performance(predictions, "tpr", "fpr")
+  plot(perf,col = "black",lty = 1, lwd = 2,
+       main = title.text, cex.main = 0.6, cex.lab = 0.8,xaxs = "i", yaxs = "i")
+  abline(0,1, col = "red")
+  auc <- performance(predictions,"auc")
+  auc <- unlist(slot(auc, "y.values"))
+  auc <- round(auc,2)
+  legend(0.4,0.4,legend = c(paste0("AUC: ",auc)), cex = 0.6, bty = "n", box.col = "white")
+}
+
+# Plot - quantidade de grÃ¡ficos na paleta grÃ¡fica do R
+par(mfrow = c(1, 2))
+plot.roc.curve(previsoes_finais_modelo_1, title.text = "Curva ROC (Modelo 1)")
+
+
+# ========================================================================================================================
+# A partir da anÃ¡lise das variÃ¡veis explanatÃ³rias mais importantes para o modelo, vamos fazer a modelagem de um novo classificador
+
+# FormulaÃ§Ã£o da equaÃ§Ã£o com as variÃ¡veis explanatÃ³rias selecionadas para o modelo
+equation_nova <- "credit.rating ~ account.balance + credit.purpose + previous.credit.payment.status + savings + credit.duration.months"
+equation_nova <- as.formula(equation_nova)
+
+# FunÃ§Ã£o usada para construÃ§Ã£o do modelo preditivo de regressÃ£o logÃ�stica
+modelo_ML_logistic_2 <- glm(equation_nova, data = training_data, family = "binomial")
+modelo_ML_logistic_2
+
+# SÃ�ntese das informaÃ§Ãµes do modelo
+summary(modelo_ML_logistic_2)
+
+# Fazendo previsÃµes com o novo modelo treinado
+# Repare que a funÃ§Ã£o predict nos fornece a previsÃ£o de cada classe expressa por probabilidades
+# Nesse caso, podemos usar a funÃ§Ã£o round para fazer o arredondamento para as classes desejadas (0 e 1) nesse caso binomial
+previsao_teste_2 <- predict(modelo_ML_logistic_2, test_data, type = 'response')
+previsao_teste_2 <- round(previsao_teste_2)
+
+previsao_teste_2_data <- data.frame(previsao_teste_2, test_target)
+colnames(previsao_teste_2_data) <- c('PrevisÃ£o Nova','Target')
+# View(previsao_teste_novo_data)
+
+# -----------------------------------------------------------------------------------------------------------------------
+# ImplementaÃ§Ã£o da Matriz de ConfusÃ£o
+
+# ConstruÃ§Ã£o da matriz de confusÃ£o a partir dos dados de teste e as previsÃµes realizadas pelo modelo de ML
+cm_modelo_2 <- confusionMatrix(table(data = previsao_teste_2, reference = test_target), positive = "1")
+# cm_modelo_2
+
+# ========================================================================================================
+# --------------------------------------------------------------------------------------------------------
+# Avaliando a performance do modelo logistio com todas as variÃ¡veis explanatÃ³rias - Modelo 1
+
+# Modelo de regressÃ£o logÃ�stica 2
+
+# PrevisÃµes do modelo de regressÃ£o logÃ�stica 1
+previsao_teste_modelo_2 <- predict(modelo_ML_logistic_2, test_data, type = 'response')
+# previsao_teste_modelo_2 <- round(previsao_teste_modelo_2)
+
+# Dataframe - previsÃ£o do modelo 2
+# dataframe_previsao_modelo_2 <- data.frame(previsao_teste_modelo_2, test_target)
+# colnames(dataframe_previsao_modelo_2) <- c('PrevisÃ£o Nova','Target')
+# View(dataframe_previsao_modelo_2)
+
+# Repare na diferenÃ§a entre a funÃ§Ã£o predict e a funÃ§Ã£o prediction
+previsoes_finais_modelo_2 <- prediction(previsao_teste_modelo_2, test_target)
+
+# FunÃ§Ã£o que podemos usar para plot da curva ROC 
+plot.roc.curve <- function(predictions, title.text){
+  perf <- performance(predictions, "tpr", "fpr")
+  plot(perf,col = "black",lty = 1, lwd = 2,
+       main = title.text, cex.main = 0.6, cex.lab = 0.8,xaxs = "i", yaxs = "i")
+  abline(0,1, col = "red")
+  auc <- performance(predictions,"auc")
+  auc <- unlist(slot(auc, "y.values"))
+  auc <- round(auc,2)
+  legend(0.4,0.4,legend = c(paste0("AUC: ",auc)), cex = 0.6, bty = "n", box.col = "white")
+}
+
+# Plot - quantidade de grÃ¡ficos na paleta grÃ¡fica do R
+plot.roc.curve(previsoes_finais_modelo_2, title.text = "Curva ROC (Modelo 2)")
+
+
+
+
+```

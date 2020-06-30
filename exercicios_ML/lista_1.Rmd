@@ -1,0 +1,246 @@
+---
+title. "Lista 1"
+output. html_document
+---
+
+Gabriel Claret de Rezende
+
+## Exercícios Conceituais 
+
+
+## Exercícios Multipla Escolha 
+
+1. A
+2. C
+3. B
+4. D
+5. A
+6. C
+7. A
+8. B
+9. B
+10. D
+
+## Exercícios Computacionais
+
+## Questao 1. 
+```{r Questao 1, message=FALSE, warning=FALSE}
+
+# 1
+df <- data.frame(
+  id = c (1:5),
+  Empresa = c("A","B","C","D","E"),
+  Indices = c(500.3,530.2,630.5,400.20,940.20),
+  Datas = as.Date(c("2020-03-05", "2020-04-21", "2020-12-10", "2020-10-15","2020-09-20")),
+  stringsAsFactors = FALSE)
+
+# 2
+str(df)
+
+# 3
+subdf <- data.frame(df$Empresa, df$Indices)
+
+# 4
+array <- df[c(1,3),c(2,4)]
+
+# 5 
+df3 <- df
+df3$Setor <- c("it","adm","executive","rh","om")
+
+# 6
+dfn <- data.frame(
+  id = c (6:10),
+  Empresa = c("F","F","G","K","L"),
+  Indices = c(1200.3,230.4,100.5,905.40,1100.50),
+  Datas = as.Date(c("2020-09-10", "2020-07-08", "2020-10-15", "2020-06-07","2020-02-22")),
+  stringsAsFactors = FALSE)
+
+df_bind <- rbind(df, dfn)
+df_bind
+
+```
+---
+## Questao 2.
+```{r Questao 2, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+# 1 - Tipo numérico. Foi utilizado a instrução str().
+
+r <- rnorm(1000, 10, 5)
+
+# 2
+hist(r, probability = TRUE, ylim = c(0,0.1))
+
+# 3
+curve(dnorm(x, 10, 5), add = TRUE, col = 'red', lwd = 1)
+
+# 4
+data <- as.data.frame(r)
+ggplot(data, aes(x = r)) + 
+                 geom_histogram(aes(y =..density..),
+                 colour = "black", 
+                 fill = "white") +
+                 stat_function(fun = dnorm, args = list(mean = 10, sd = 5))
+```
+---
+## Questao 3.
+```{r Questao 3, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(leaflet)
+
+# 1 
+data1 <- read.delim("./datasets_lista_1/dataset_1.csv", skip = 20, sep = ',', header = FALSE)
+data2 <- read.delim("./datasets_lista_1/dataset_2.csv", skip = 20, sep = ',', header = FALSE)
+
+# 2 - Informações contidas no arquivo: Freq, SA Clear-Write, SA Blank, SA Blank, SA Blank
+
+# 3 
+
+hist(data1$V2, probability = TRUE, breaks = 100, main = 'Histograma dataset 1')
+
+hist(data2$V2, probability = TRUE, breaks = 100, main = 'Histograma dataset 2')
+
+
+# 4 # GPS Latitude: 22 15.40727 S
+    # GPS Longitude: 45 41.74932 W
+
+gps_lat = -22.25679
+gps_long = -45.69582
+
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng = gps_long, lat = gps_lat,
+             popup = 'ponto 1',
+             clusterOptions = markerClusterOptions())
+
+
+
+
+```
+---
+## Questao 5.
+```{r Questao 5, message=FALSE, warning=FALSE}
+
+# 1
+x = seq(1, 100, length.out = 100)
+
+h <- 3*x + 30
+
+set.seed(123)
+epsilon <- rnorm(100, 0, 15)
+
+y <- h + epsilon
+
+# 2
+plot(x,y,col=1, pch=1, 
+     col.main = 'black', 
+     xlab = 'Var Eploratoria',
+     ylab = 'Var de Saida')
+grid()
+
+h_estimado <- 2.8*x + 32
+y2 <- h_estimado + epsilon
+# 3
+
+hist(y, main = 'Histograma do H verdadeiro')
+hist(y2, main = 'Histograma do H estimado')
+
+# 4 - MSE é uma métrica que é relacionada ao erro das predições do modelo 
+
+# 5
+MSE = (1/100)*sum(((y - h_estimado)^2))
+MSE
+
+# 6 - Sim, Depende do MSE e ele é relativamente baixo.
+
+```
+---
+## Questao 6.
+```{r Questao 6, message=FALSE, warning=FALSE}
+
+# 1
+std_vector = seq(1, 20, length.out = 100)
+mse_vector = rep(0,length(std_vector))
+mse = rep(0, 1000)
+
+x = seq(1, 100, length.out = 100)
+
+h_x <- 3*x + 30
+
+for (i in 1:length(std_vector)){
+  for (j in 1:1000){
+    
+    e <- rnorm(100, 0, std_vector[i])
+    y <- h_x + e
+    h_est <- 2.8*x + 32
+    
+    mse[j] = (1/100)*sum(((y - h_est)^2))
+  }
+  mse_vector[i] = mean(mse)
+}
+# 2
+plot(x = std_vector, y = mse_vector, xlab = 'desvio padrao', ylab ='mse', type = 'p')
+
+
+```
+---
+## Questao 7.
+```{r Questao 7, message=FALSE, warning=FALSE}
+
+# 1
+x = seq(1, 100, length.out = 100)
+
+n_vector = seq(10, 100, 5)
+
+mse_vector = rep(0,length(n_vector))
+mse = rep(0, 1000)
+
+for (i in 1:length(n_vector)){
+  n = n_vector[i]
+  x = seq(1, 100, length.out = n)
+  h_x <- 3*x + 30
+  
+  for (j in 1:1000){
+    
+    e <- rnorm(n, 0, 0.5)
+    y <- h_x + e
+    h_est <- 2.8*x + 32
+    
+    mse[j] = (1/n)*sum(((y - h_est)^2))
+  }
+  mse_vector[i] = mean(mse)
+}
+
+# 2
+plot(x = n_vector, y = mse_vector, xlab = 'desvio padrao', ylab ='mse', type = 'p')
+
+```
+---
+## Questao 8.
+```{r Questao 8, message=FALSE, warning=FALSE}
+
+library(quantmod)
+library(xts)
+library(moments)
+
+
+# 1
+getSymbols("PETR4.SA", src = "yahoo", from = "2020-01-01", to = "2020-06-29")
+
+# 2 
+st_petr = na.omit(PETR4.SA)
+
+close_petr <- st_petr$PETR4.SA.Close
+
+candleChart(close_petr)
+
+# 3
+plot(st_petr$PETR4.SA.Open, main = "PETR Open", xlab = "Tempo", ylab = "Valor")
+
+candleChart(PETR4.SA)
+
+# 4
+addBBands(20, 1)
+
+
+```

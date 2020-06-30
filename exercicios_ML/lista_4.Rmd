@@ -1,0 +1,35 @@
+---
+title: "lista_4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercícios Conceituais 
+
+## Exercícios Multipla Escolha 
+
+4. C
+5. A
+6. B
+7. C
+8. D
+9. D
+10. C
+
+## Questao 1. 
+```{r Questao 1, message=FALSE, warning=FALSE}
+
+```
+---
+## Questao 2.
+```{r Questao 2, message=FALSE, warning=FALSE}
+
+```
+---
+## Questao 3.
+```{r Questao 3, message=FALSE, warning=FALSE}
+
+```

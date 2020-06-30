@@ -1,0 +1,168 @@
+---
+title: "lista_2"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Exercícios Multipla Escolha 
+
+plot(data$Population,data$Profit, main = 'GrÃ¡fico de DispersÃ£o - PopulaÃ§Ã£o vs Lucro', 
+     xlab = 'PopulaÃ§Ã£o (baseado 10,000 hab)', ylab = 'Lucro (baseado em $10,000 dÃ³lares)', pch = 1, col = 'blue')
+
+legend("topright",legend = c('Dados'), col = c('blue'), pch = c(1)) 
+grid() 
+
+# Plotando a linha de regressÃ£o
+?abline
+# dica: funÃ§Ã£o abline(a,b)
+# 1) a -> intercept do modelo de regressÃ£o
+# 2) b -> coeficiente da reta do modelo de regressÃ£o
+abline(modelo_ML$coefficients[1],modelo_ML$coefficients[2],col = 'red')
+
+# Modelo de regressÃ£o
+h = modelo_ML$coefficients[1] + modelo_ML$coefficients[2]*x
+# VisualizaÃ§Ã£o
+ggplot(data, 
+       aes(x = Population, y = Profit)) + 
+  geom_point(size=3, aes(colour = "Dados de Treinamento")) + 
+  geom_line(aes(x = x, y = h, colour = "Modelo de RegressÃ£o"),linetype = 1, size=1.5) +
+  scale_colour_manual(name="Legenda", values=c("blue", "red")) + 
+  xlab('PopulaÃ§Ã£o (baseada em 10.000)') + ylab('Lucro (baseado em $10.000)')  +
+  ggtitle("GrÃ¡fico de DispersÃ£o - PopulaÃ§Ã£o vs Lucro")
+
+
+1. C
+2. A
+3. C
+4. D
+5. B
+6. B
+7. D
+8. B
+9. A
+10. C
+
+## Questao 1. 
+```{r Questao 1, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+# 1
+data <- read.table('data.txt', sep = ',', col.names = c("Population", "Profit"))
+View(data)
+
+# 2 
+modelo <- lm(Profit ~ Population, data = data)
+modelo
+
+x = data$Population
+y = data$Profit
+
+# 3
+prediction = as.data.frame(predict(modelo))
+View(prediction)
+media = mean(modelo$residuals)
+media
+
+# 4 
+new_region = data.frame(10)
+colnames(new_region) <- c('Population')
+new_region
+prediction_tst <- predict(modelo, new_region)
+prediction_tst <- data.frame(prediction_tst*10000)
+prediction_tst
+
+# 6
+size = dim(data)
+ones = replicate(size[1],1)
+
+X = as.matrix(data.frame(ones, x))
+View(X)
+
+theta = solve(t(X) %*% X) %*% (t(X) %*% y) 
+theta0 = theta[1]
+theta1 = theta[2]
+theta0
+theta1
+
+# 7
+summary(modelo)
+```
+---
+## Questao 2.
+```{r Questao 2, message=FALSE, warning=FALSE}
+library(MASS)
+
+# 1
+data <- Boston
+View(data)
+
+# 2
+modelo <- lm(medv ~ lstat, data = data)
+modelo
+
+# 3
+prediction = as.data.frame(predict(modelo))
+View(prediction)
+media = mean(modelo$residuals)
+media
+
+# 4
+new = data.frame(25)
+colnames(new) <- c('lstat')
+new
+prediction_tst <- predict(modelo, new)
+prediction_tst <- data.frame(prediction_tst*1000)
+prediction_tst
+
+# 6
+size = dim(data)
+ones = replicate(size[1],1)
+x = data$medv
+y = data$lstat
+X = as.matrix(data.frame(ones, x))
+View(X)
+
+theta = solve(t(X) %*% X) %*% (t(X) %*% y) 
+theta0 = theta[1]
+theta1 = theta[2]
+theta0
+theta1
+
+# 7
+summary(modelo)
+```
+---
+## Questao 3.
+```{r Questao 3, message=FALSE, warning=FALSE}
+
+library(MASS)
+
+# 1
+data <- Boston
+str(data$crim)
+str(data$rm)
+str(data$lstat)
+
+# 2 
+maximo <- apply(data, 2, max) 
+minimo <- apply(data, 2, min)
+
+maximo
+minimo
+
+data_normal <- as.data.frame(scale(data, center = minimo, scale = maximo - minimo))
+head(data_normal)
+
+
+# 3 
+modelo <- lm(medv ~  crim + rm + lstat, data = data_normal)
+modelo
+
+# 4
+prediction = as.data.frame(predict(modelo))
+View(prediction)
+media = mean(modelo$residuals)
+media
+
+```
